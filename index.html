@@ -1,7 +1,204 @@
+<!DOCTYPE html>
 <html>
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="shortcut icon" href="favicon.png">
+    <title>Helper</title>
+    <link href="style.css" rel="stylesheet">
+    <script src="//code.jquery.com/jquery-latest.min.js" type="text/javascript"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js" type="text/javascript"></script>
+    <script>
+
+        $(function(){
+            
+            var title_orig = document.title;
+            
+            var updateRates = function(){
+                $.getJSON("https://api.bitcoinaverage.com/exchanges/USD", function(data){
+                    var total_volume = 0.0;
+                    for(var symb in data){ 
+                        try{
+                            $(".ticker."+symb+" .price").html(data[symb].rates.last);
+                            $(".ticker."+symb+" .volume").html("vol: " + Math.round(data[symb].volume_btc));
+                            total_volume += data[symb].volume_btc;
+                        }
+                        catch(e){}
+                        $(".ticker.average .volume").html("vol: " + Math.round(total_volume));
+                    }
+                })
+                $.getJSON("https://api.bitcoinaverage.com/ticker/global/USD/last", function(data){
+                    document.title = data + " USD/BTC - " + title_orig;    
+                    $(".ticker.average .price").html(data);
+                })
+            }
+            
+            setInterval(updateRates, 30 * 1000);
+            
+            
+            
+            
+            var chart_width = 940;
+            
+            if($.cookie('chart_width') > 0){
+                chart_width = $.cookie('chart_width');
+                $('.set-chart-width').show();
+                $('.set-chart-width[data-new-width='+chart_width+']').hide();
+            }
+
+            var symbol_colors = {btcnCNY: 'green', mtgoxUSD: 'red', bitstampUSD: 'blue', btceUSD: '#336699'}
+            
+            var getSrc = function(exchanger, days, interval, volume_in_currency, log){
+                var params = "width="+chart_width+"&m="+exchanger+"&SubmitButton=Draw&c=0&s=&e=&Prev=&Next=&t=S&b=&a1=&m1=10&a2=&m2=25&x=0&i1=&i2=&i3=&i4=&v=1&cv="+volume_in_currency+"&ps=0&l="+log+"&p=0&";
+                var src = "https://bitcoincharts.com/charts/chart.png?" + params;
+                
+                src += "&r="+days+"&i="+interval+"&rand="+new Date().getTime();
+                return src;
+            }
+
+            var setChartWidth = function(val){
+                $.cookie('chart_width', val, { expires: 365 });
+                document.location.reload();
+            }
+
+            $(".set-chart-width").click(function(){
+                setChartWidth($(this).data('new-width'));
+            });
+            
+            $(".chart_row").width(chart_width);
+
+            $(document).on("click", ".days", function(){
+                var days = $(this).data("days");
+                var $row = $(this).closest(".chart_row");
+                var interval = "";
+                var volume_in_currency  = $("input.vol_in_cur", $row).is(":checked") ? 1 : 0; 
+                var log_scale           = $("input.log_scale", $row).is(":checked") ? 1 : 0; 
+                if(days == 1)  interval = "5-min";
+                if(days == 30) interval = "2-hour";
+                if(days == 90) interval = "6-hour";
+                if(days == 182) interval = "12-hour";
+                $(".chart img", $row).css("opacity", "0.6");
+                $(".chart img", $row).unbind("error");
+                $(".chart img", $row).bind("error", function(arg, arg2){   
+                    $(".chart img", $row).attr("src", "http://bbtc.ru/favicon.png");
+                });
+                $(".chart img", $row).attr("src", getSrc($row.data("exchanger"), days, interval, volume_in_currency, log_scale));
+                $(".chart .oversign", $row).html($row.data("exchanger"));
+                
+                $(".chart .oversign", $row).css('color', symbol_colors[$row.data("exchanger")]);
+                $(".chart img", $row).unbind("load");
+                $(".chart img", $row).bind("load", function(){   
+                    $(".chart img", $row).css("opacity", "1");
+                });
+                $(".days", $row).removeClass("active");
+                $(this).addClass("active");
+                
+                // Обновляем курс в заголовке страницы
+                updateRates();
+            });
+
+            $(document).on("click", ".change_exchanger", function(){
+                var $row = $(this).closest(".chart_row");
+                $row.data("exchanger", $(this).data("symbol"));
+                $(".change_exchanger", $row).removeClass("active");
+                $(this).addClass("active");
+
+                $("button.days.active", $row).click();
+            })
+
+            $(document).on("click", "input[type=checkbox]", function(){
+                var $row = $(this).closest(".chart_row");
+                $("button.days.active", $row).click();
+            });
+
+            $(".add_row").click(function(){
+                $(".chart_row").last().clone(true).insertAfter($(".chart_row").last());
+                $(this).remove();
+            });
+            
+            $(".chart img").click(function(){
+                var $row = $(this).closest(".chart_row");
+                $("button.days.active", $row).click();
+            });
+
+            $(".default").click();
+
+        })
+    </script>
 </head>
 <body>
-HELLO HTML
+    <div class="tac">
+        BBTC.RU - Графики обменного курса Биткоин
+        <br><br>
+    </div>
+
+    <div class="tickers tac">
+        <div class="ticker average">
+            <div><a href="https://bitcoinaverage.com">average</a></div>
+            <div class="price">...</div>
+            <div class="volume"></div>
+        </div>
+        <div class="ticker bitstamp">
+            <div>bitstamp</div>
+            <div class="price">...</div>
+            <div class="volume"></div>
+        </div>
+        <div class="ticker btce">
+            <div>btce</div>
+            <div class="price">...</div>
+            <div class="volume"></div>
+        </div>
+        <div class="ticker bitfinex">
+            <div>bitfinex</div>
+            <div class="price">...</div>
+            <div class="volume"></div>
+        </div>
+    </div>
+    
+    <div class="charts">
+        <div class="chart_row" data-exchanger="bitstampUSD">
+            <div class="buttons">
+                <button class="days" data-days="999999">All time</button>
+                <button class="days" data-days="365">1 year</button>
+                <button class="days" data-days="182">6 mon.</button>
+                <button class="days" data-days="90">3 mon.</button>
+                <button class="days" data-days="30">30 days</button>
+                <button class="days" data-days="10">10 days</button>
+                <button class="days default" data-days="2">2 days</button>
+                <button class="days" data-days="1">1 day</button>
+                &nbsp;&nbsp;&nbsp;
+                <a href="javascript:;" class="change_exchanger active" data-symbol="bitstampUSD" title="Большая европейская биржа">bitstamp</a>
+                &nbsp;
+                <a href="javascript:;" class="change_exchanger" data-symbol="btceUSD" title="Русская биржа">btce</a>
+                &nbsp;
+                <a href="javascript:;" class="change_exchanger" data-symbol="bitfinexUSD">bitfinex</a>
+                &nbsp;
+                <a href="javascript:;" class="change_exchanger" data-symbol="btcnCNY" title="Китайская биржа">btcn</a>
+                &nbsp;
+                <a href="javascript:;" class="change_exchanger" data-symbol="mtgoxUSD" title="Самая первая биржа" style="color: #ccc;">mtgox</a>
+                <br>
+                <br>
+                <label><input type="checkbox" style="vertical-align: middle;" class="vol_in_cur"> Объем в валюте</label>
+                <label><input type="checkbox" style="vertical-align: middle;" class="log_scale" checked="checked"> Логарифмическая шкала</label>
+                
+                <div style="float: right;">
+                    <a href="javascript:;" class="set-chart-width" data-new-width="1280">1280px</a>
+                    <a href="javascript:;" class="set-chart-width" data-new-width="940" style="display: none;">940px</a>
+                </div>
+            </div>
+            
+            <div class="chart">
+                <div class="oversign">Name Of Exchanger Here</div>
+                <img>
+            </div>
+            
+            <a href="javascript:;" class="add_row pale">Clone chart</a>
+        </div>
+    </div>    
+    
+    <div style="text-align: right;">
+        <a href="http://bitcoincharts.com/" style="font-size: 10px; font-family: Tahoma">bitcoincharts.com</a>
+    </div>
+
+
 </body>
 </html>
