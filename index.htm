@@ -80,7 +80,6 @@
                 $(".chart img", $row).unbind("error");
                 $(".chart img", $row).bind("error", function(arg, arg2){   
                     console.log(arg);
-                    console.log(arg2);
                 });
                 $(".chart img", $row).attr("src", getSrc($row.data("exchanger"), days, interval, volume_in_currency, log_scale));
                 $(".chart .oversign", $row).html($row.data("exchanger"));
