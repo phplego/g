@@ -14,7 +14,7 @@
             var title_orig = document.title;
             
             var updateRates = function(){
-                $.getJSON("https://api.bitcoinaverage.com/exchanges/USD", function(data){
+                $.getJSON("https://apiv2.bitcoinaverage.com/exchanges/USD", function(data){
                     var total_volume = 0.0;
                     for(var symb in data){ 
                         try{
