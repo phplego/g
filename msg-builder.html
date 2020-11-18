@@ -137,7 +137,7 @@
             const valueBinary = binary.substring(offset, offset + f.size)
             out += `<b>${f.description}</b> ${f.size} bit ${offset}..${offset+f.size}`
             out += "\n"
-            out += valueBinary + ' ' + parseInt(valueBinary, 2)
+            out += `value: b${valueBinary} = ${parseInt(valueBinary, 2)} dec`
             out += "\n"
             out += "\n"
 
