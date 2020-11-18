@@ -103,7 +103,6 @@
 <br>
 <br>
 <br>
-<br>
 
 <button onclick="location.href = '#'">CLEAR</button>
 <a href="javascript:" onclick="prompt('COPY URL HERE:',createUrl(document.getElementById('code').value))">get link</a>
@@ -111,8 +110,10 @@
 <br>
 
 <div style="display: flex">
-
-    <textarea id=code cols=60 rows=25 style=""></textarea>
+    <div>
+        BITWISE SCHEME:<br>
+        <textarea id=code cols=60 rows=25 style=""></textarea>
+    </div>
     <div style="margin-left: 100px">
         Format hint:
         <pre>#commented line<br>[{size}] {value} {description}<br>[{size}] {value} {description}<br>...</pre>
