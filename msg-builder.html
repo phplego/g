@@ -23,41 +23,53 @@
         result += `bits: ${bits} \n`
         result += `hex : ${hex} (${hex.length / 2} bytes) \n`
 
+        document.getElementById('hex').value = hex
         document.getElementById('output').value = result
+    }
+
+    function compile(code) {
+        const lines = code.trim().split("\n")
+
+        let fields = []
+
+        for(const line of lines){
+            if(line[0] === '#') continue
+            if(line.trim() === '') continue
+
+            const item = {}
+            item.line = line
+            if(line.match(/^\[\d+]\s*\d+.*$/)){
+                item.size  = parseInt(line.match(/^\[(\d+)]/)[1])
+                item.value = parseInt(line.match(/^\[\d+]\s*(\d+)/)[1])
+                item.description  =  line.match(/^\[\d+]\s*\d+(.+)/)[1].trim()
+                item.valueBinary = parseInt(item.value).toString(2)
+                if(item.valueBinary.length <= item.size){
+                    item.bits = item.valueBinary.padStart(item.size, '0')
+                }
+                else{
+                    item.bits = '#overflow'
+                    item.error = 'overflow: '+ value + ' needs ' + item.valueBinary.length + ' bits'
+                }
+            }
+            else{
+                item.error = 'wrong format: ' + line
+            }
+            fields.push(item)
+        }
+
+        return fields
     }
 
     function code2bits(code)
     {
-        code = code.replace(/\n+/g, "\n")
-        const lines = code.trim().split("\n")
-        console.log(lines)
+        const fields = compile(code)
 
-        let bits = ''
-
-        for(const p of lines){
-            if(p[0] == '#') continue
-
-            if(p.match(/^\[\d+\]\s*\d+.*$/)){
-                const size  = p.match(/^\[(\d+)\]/)[1]
-                const value = p.match(/^\[\d+\]\s*(\d+)/)[1]
-                console.log(size)
-                console.log(value)
-                const valueBinary = parseInt(value).toString(2)
-                if(valueBinary.length <= size){
-                    bits += valueBinary.padStart(size, '0')
-                }
-                else{
-                    alert('overflow: '+ value + ' needs ' + valueBinary.length + ' bits')
-                    bits += '#overflow'
-                }
-                bits += ' '
-            }
-            else{
-                alert('wrong format: ' + p)
-            }
+        const fieldWithErrors = fields.filter(x=>x.error)
+        if(fieldWithErrors.length > 0){
+            alert(fieldWithErrors.map(x=>x.error).join("\n"))
         }
 
-        return bits
+        return fields.map(x=>x.bits).join(' ')
     }
 
     function code2hex(code)
@@ -72,13 +84,10 @@
         {
             // Grab a chunk of 4 bits
             const bytes = binaryString.substr(i, 4)
-            console.log('bytes', bytes)
 
             // Convert to decimal then hexadecimal
             const decimal = parseInt(bytes, 2)
-            console.log('decimal', decimal)
             const hex = decimal.toString(16)
-            console.log('hex', hex)
 
             // Uppercase all the letters and append to output
             output += hex.toUpperCase();
@@ -95,6 +104,47 @@
             (location.search?location.search:"")
 
         return currentUrl + '#' + code.replace(/\n/g, '|')
+    }
+
+    function hex2bin(hex) {
+        let result = ''
+        for (let i = 0; i < hex.length; i++) {
+            result += parseInt(hex.charAt(i), 16).toString(2).padStart(4, '0')
+        }
+        return result
+    }
+
+    function explain()
+    {
+        const hex = document.getElementById('hex').value
+        const numberOfBits = hex.length * 4
+        const binary = hex2bin(hex)
+
+        const code = document.getElementById('code').value
+        const fields = compile(code)
+        const expectedSize = fields.map(x=>parseInt(x.size)).reduce((a,b)=>a+b,0)
+
+        if(numberOfBits !== expectedSize){
+            alert('wrong message length')
+            return
+        }
+
+        let out = '';
+        let offset = 0
+
+        for(const f of fields)
+        {
+            const valueBinary = binary.substring(offset, offset + f.size)
+            out += `<b>${f.description}</b> ${f.size} bit ${offset}..${offset+f.size}`
+            out += "\n"
+            out += valueBinary + ' ' + parseInt(valueBinary, 2)
+            out += "\n"
+            out += "\n"
+
+            offset += f.size
+        }
+
+        document.getElementById('explain-output').innerHTML = out;
     }
 
 </script>
@@ -121,11 +171,18 @@
         <a href="## сообщение OFTEN (1 фаза)||[3] 0  cmd|[1] 0  флаг экспорта|[6] 0  год|[4] 11 месяц|[5] 18 день|[5] 23 час|[1] 1  получас||[3] 2  номер тарифа|[23] 0 актив|[23] 8388607 реакт|[6] 0 напр">Electro10 Often (1 фаза)</a><br>
         <a href="## сообщение OFTEN (3 фазы)||[3] 1  cmd|[1] 0  флаг экспорта|[6] 0  год|[4] 11 месяц|[5] 18 день|[5] 23 час|[1] 1  получас||[3]  2  номер тарифа|[23] 0 фаза1 актив |[23] 0 фаза1 реакт|[6]  0 фаза1 напр|[23] 0 фаза2 актив |[23] 0 фаза2 реакт|[6]  0 фаза2 напр|[23] 0 фаза3 актив |[23] 0 фаза3 реакт|[6]  0 фаза3 напр">Electro10 Often (3 фазы)</a><br>
     </div>
+    <div style="margin-left: 100px; background-color: #eee">
+        <div>Parse hex</div>
+        <input id="hex" style="width: 400px">
+        <button onclick="explain()">explain</button>
+
+        <div id="explain-output" style="white-space: pre-line"></div>
+    </div>
 </div>
 
 
 <br>
-<button onclick="build()">BUILD</button>
+<button onclick="build()">BUILD HEX</button>
 <br>
 <br>
 
