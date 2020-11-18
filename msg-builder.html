@@ -106,26 +106,27 @@
 <br>
 
 <button onclick="location.href = '#'">CLEAR</button>
-<a href="javascript: prompt('COPY URL HERE:',createUrl(document.getElementById('code').value))">get link</a>
+<a href="javascript:" onclick="prompt('COPY URL HERE:',createUrl(document.getElementById('code').value))">get link</a>
 <br>
 <br>
 
 <div style="display: flex">
 
-    <textarea id=code cols=60 rows=20 style=""></textarea>
+    <textarea id=code cols=60 rows=25 style=""></textarea>
     <div style="margin-left: 100px">
+        Format hint:
+        <pre>#commented line<br>[{size}] {value} {description}<br>[{size}] {value} {description}<br>...</pre>
         Examples:<br>
-        <a href="#|# сообщение OFTEN (1 фаза)|||[4] 0  cmd|[6] 0  год|[4] 11 месяц|[5] 18 день|[5] 23 час|[1] 1  получас||[3] 2  номер тарифа|[23] 0 актив|[23] 8388607 реакт|[6] 0 напр">Electro10 Often (1 фаза)</a><br>
-        <a href="#[4] 1 cmd|[6] 0 год|[4] 11 месяц">Electro10 Often (3 фазы)</a><br>
+        <a href="## сообщение OFTEN (1 фаза)||[3] 0  cmd|[1] 0  флаг экспорта|[6] 0  год|[4] 11 месяц|[5] 18 день|[5] 23 час|[1] 1  получас||[3] 2  номер тарифа|[23] 0 актив|[23] 8388607 реакт|[6] 0 напр">Electro10 Often (1 фаза)</a><br>
+        <a href="## сообщение OFTEN (3 фазы)||[3] 1  cmd|[1] 0  флаг экспорта|[6] 0  год|[4] 11 месяц|[5] 18 день|[5] 23 час|[1] 1  получас||[3]  2  номер тарифа|[23] 0 фаза1 актив |[23] 0 фаза1 реакт|[6]  0 фаза1 напр|[23] 0 фаза2 актив |[23] 0 фаза2 реакт|[6]  0 фаза2 напр|[23] 0 фаза3 актив |[23] 0 фаза3 реакт|[6]  0 фаза3 напр">Electro10 Often (3 фазы)</a><br>
     </div>
 </div>
 
 
 <br>
-<br>
 <button onclick="build()">BUILD</button>
 <br>
 <br>
 
-<textarea id=output cols=200 rows=5>
+<textarea id=output rows=5 style="width: 100%">
 </textarea>
