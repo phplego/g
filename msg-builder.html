@@ -116,7 +116,7 @@
 
     function explain()
     {
-        const hex = document.getElementById('hex').value
+        const hex = document.getElementById('hex').value.replaceAll(' ', '')
         const numberOfBits = hex.length * 4
         const binary = hex2bin(hex)
 
@@ -125,7 +125,7 @@
         const expectedSize = fields.map(x=>parseInt(x.size)).reduce((a,b)=>a+b,0)
 
         if(numberOfBits !== expectedSize){
-            alert('wrong message length')
+            alert(`Wrong message length!\nScheme size: ${expectedSize} bits\nMessage size: ${numberOfBits} bits`)
             return
         }
 
