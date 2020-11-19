@@ -48,7 +48,7 @@
                 }
                 else{
                     item.bits = '#overflow'
-                    item.error = 'overflow: '+ value + ' needs ' + item.valueBinary.length + ' bits'
+                    item.error = 'overflow: '+ item.value + ' needs ' + item.valueBinary.length + ' bits'
                 }
             }
             else{
@@ -165,6 +165,8 @@
     <div>
         BITWISE SCHEME:<br>
         <textarea id=code cols=60 rows=25 style=""></textarea>
+        <br><br>
+        <button onclick="build()">BUILD HEX</button>
     </div>
     <div style="margin-left: 100px">
         Format hint:
@@ -194,7 +196,7 @@
 
 
 <br>
-<button onclick="build()">BUILD HEX</button>
+
 <br>
 <br>
 
