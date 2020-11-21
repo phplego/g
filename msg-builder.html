@@ -4,7 +4,7 @@
     function processHash(){
         let text = decodeURIComponent(location.hash.substring(1))
         text = text.replaceAll('|', "\n")
-        document.getElementById('code').value = text
+        document.getElementById('scheme').value = text
     }
 
     window.addEventListener("hashchange", processHash)
@@ -12,10 +12,10 @@
 
     function build()
     {
-        const code = document.getElementById('code').value
+        const scheme = document.getElementById('scheme').value
 
-        const bits = code2bits(code)
-        const hex = code2hex(code)
+        const bits = scheme2bits(scheme)
+        const hex = scheme2hex(scheme)
         const bitsLen = bits.replace(/\D+/g, '').length;
 
         let result = ''
@@ -27,8 +27,8 @@
         document.getElementById('output').value = result
     }
 
-    function compile(code) {
-        const lines = code.trim().split("\n")
+    function compile(scheme) {
+        const lines = scheme.trim().split("\n")
 
         let fields = []
 
@@ -60,9 +60,9 @@
         return fields
     }
 
-    function code2bits(code)
+    function scheme2bits(scheme)
     {
-        const fields = compile(code)
+        const fields = compile(scheme)
 
         const fieldWithErrors = fields.filter(x=>x.error)
         if(fieldWithErrors.length > 0){
@@ -72,9 +72,9 @@
         return fields.map(x=>x.bits).join(' ')
     }
 
-    function code2hex(code)
+    function scheme2hex(scheme)
     {
-        const bits = code2bits(code)
+        const bits = scheme2bits(scheme)
         const binaryString = bits.replace(/\s+/g, '')
 
         let output = ''
@@ -96,14 +96,14 @@
         return output;
     }
 
-    function createUrl(code)
+    function createUrl(scheme)
     {
         const currentUrl = location.protocol+'//'+
             location.host+
             location.pathname+
             (location.search?location.search:"")
 
-        return currentUrl + '#' + encodeURIComponent(code.replace(/\n/g, '|'))
+        return currentUrl + '#' + encodeURIComponent(scheme.replace(/\n/g, '|'))
     }
 
     function hex2bin(hex) {
@@ -120,8 +120,8 @@
         const numberOfBits = hex.length * 4
         const binary = hex2bin(hex)
 
-        const code = document.getElementById('code').value
-        const fields = compile(code)
+        const scheme = document.getElementById('scheme').value
+        const fields = compile(scheme)
         const expectedSize = fields.map(x=>parseInt(x.size)).reduce((a,b)=>a+b,0)
 
         if(numberOfBits !== expectedSize){
@@ -129,7 +129,7 @@
             return
         }
 
-        let out = '';
+        let out = ''
         let offset = 0
 
         for(const f of fields)
@@ -149,6 +149,26 @@
         document.getElementById('explain-output').innerHTML = out;
     }
 
+
+    function updateSchemeValues()
+    {
+        const scheme = document.getElementById('scheme').value
+
+        const hex = document.getElementById('hex').value.replaceAll(' ', '')
+        const binary = hex2bin(hex)
+
+        let offset = 0
+        const replaced = scheme.replace(/\[(\d+)]\s*(\d+)/g, (all, sz, val) => {
+            sz = parseInt(sz)
+            let valueBinary = binary.substring(offset, offset + sz)
+            valueBinary = valueBinary === '' ? 0 : valueBinary
+            let value = parseInt(valueBinary, 2)
+            offset += sz
+            return `[${sz}] ${value}`
+        })
+        document.getElementById('scheme').value = replaced;
+    }
+
 </script>
 
 
@@ -157,14 +177,14 @@
 <br>
 
 <button onclick="location.href = '#'">CLEAR</button>
-<a href="javascript:" onclick="prompt('COPY URL HERE:',createUrl(document.getElementById('code').value))">get link</a>
+<a href="javascript:" onclick="prompt('COPY URL HERE:',createUrl(document.getElementById('scheme').value))">get link</a>
 <br>
 <br>
 
 <div style="display: flex">
     <div>
         BITWISE SCHEME:<br>
-        <textarea id=code cols=60 rows=25 style=""></textarea>
+        <textarea id=scheme cols=60 rows=25 style=""></textarea>
         <br><br>
         <button onclick="build()">BUILD HEX</button>
     </div>
@@ -192,6 +212,7 @@
         <div>Parse hex</div>
         <input id="hex" style="width: 400px">
         <button onclick="explain()">explain</button>
+        <button onclick="updateSchemeValues()" title="update scheme values">up</button>
 
         <div id="explain-output" style="white-space: pre-line"></div>
     </div>
