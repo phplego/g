@@ -13,9 +13,10 @@
     function build()
     {
         const scheme = document.getElementById('scheme').value
+        const appendZero = document.getElementById('append-zero').checked
 
         const bits = scheme2bits(scheme)
-        const hex = scheme2hex(scheme)
+        const hex = scheme2hex(scheme, appendZero)
         const bitsLen = bits.replace(/\D+/g, '').length;
 
         let result = ''
@@ -72,7 +73,7 @@
         return fields.map(x=>x.bits).join(' ')
     }
 
-    function scheme2hex(scheme)
+    function scheme2hex(scheme, appendZeroesToWholeByte = true)
     {
         const bits = scheme2bits(scheme)
         const binaryString = bits.replace(/\s+/g, '')
@@ -90,10 +91,16 @@
             const hex = decimal.toString(16)
 
             // Uppercase all the letters and append to output
-            output += hex.toUpperCase();
+            output += hex.toUpperCase()
         }
 
-        return output;
+        if(!appendZeroesToWholeByte)
+            return output
+
+        if(output.length % 2 === 0)
+            return output
+        else
+            return output + '0';
     }
 
     function createUrl(scheme)
@@ -122,11 +129,10 @@
 
         const scheme = document.getElementById('scheme').value
         const fields = compile(scheme)
-        const expectedSize = fields.map(x=>parseInt(x.size)).reduce((a,b)=>a+b,0)
+        const schemeSize = fields.map(x=>parseInt(x.size)).reduce((a,b)=>a+b,0)
 
-        if(numberOfBits !== expectedSize){
-            alert(`Wrong message length!\nScheme size: ${expectedSize} bits\nMessage size: ${numberOfBits} bits`)
-            return
+        if(numberOfBits < schemeSize){
+            alert(`Warining! Message too short.\nScheme size: ${schemeSize} bits\nMessage size: ${numberOfBits} bits`)
         }
 
         let out = ''
@@ -187,6 +193,7 @@
         <textarea id=scheme cols=60 rows=25 style=""></textarea>
         <br><br>
         <button onclick="build()">BUILD HEX</button>
+        <input id="append-zero" type="checkbox" checked="checked"> Append zero to whole byte
     </div>
     <div style="margin-left: 100px">
         Format hint:
