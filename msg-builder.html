@@ -32,7 +32,8 @@
             document.getElementById('output').value = result
         }
 
-        function compile(scheme) {
+        function compile(scheme)
+        {
             const lines = scheme.trim().split("\n")
 
             let fields = []
@@ -53,7 +54,7 @@
                     }
                     else{
                         item.bits = '#overflow'
-                        item.error = 'overflow: '+ item.value + ' needs ' + item.valueBinary.length + ' bits'
+                        item.error = 'overflow: ' + item.value + ' needs ' + item.valueBinary.length + ' bits'
                     }
                 }
                 else{
@@ -65,7 +66,7 @@
             return fields
         }
 
-        function scheme2bits(scheme)
+        function scheme2bits(scheme, reversedByte = false)
         {
             const fields = compile(scheme)
 
@@ -74,13 +75,26 @@
                 alert(fieldWithErrors.map(x=>x.error).join("\n"))
             }
 
-            return fields.map(x=>x.bits).join(' ')
+            let bits = fields.map(x => x.bits)
+
+            if(reversedByte) {
+                bits = bits.map(b => b.split('').reverse().join(''))
+                let binaryString =  bits.join('')
+                binaryString = binaryString.match(/.{8}/g).map(eightBit => {
+                    console.log(eightBit)
+                    return eightBit.split('').reverse().join('')
+                }).join('')
+                return binaryString
+            }
+
+            return bits.join(' ');
         }
 
         function scheme2hex(scheme, appendZeroesToWholeByte = true)
         {
             const bits = scheme2bits(scheme)
-            const binaryString = bits.replace(/\s+/g, '')
+            let binaryString = bits.replace(/\s+/g, '')
+
 
             let output = ''
 
@@ -88,7 +102,7 @@
             for (let i = 0; i < binaryString.length; i += 4)
             {
                 // Grab a chunk of 4 bits
-                const bytes = binaryString.substr(i, 4)
+                const bytes = binaryString.substr(i, 4).padEnd(4, '0')
 
                 // Convert to decimal then hexadecimal
                 const decimal = parseInt(bytes, 2)
@@ -220,6 +234,9 @@
             <br>
             <a href="#%23%20Electro1F%20-%20%D1%81%D0%BE%D0%BE%D0%B1%D1%89%D0%B5%D0%BD%D0%B8%D0%B5%20OFTEN%20%7C%7C%5B4%5D%20%200%20pktid%7C%5B23%5D%201%20fnxTime%7C%7C%5B24%5D%20333%20%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%7C%5B24%5D%20444%20%D1%80%D0%B5%D0%B0%D0%BA%D1%82%7C%5B1%5D%20%200%20%20%20voltage%20sign%7C%5B4%5D%20%2010%20%20voltage%20value">
                 Electro1F: Often Import
+            </a><br>
+            <a href="#%23%20FMC%3A%20%D1%81%D0%BE%D0%BE%D0%B1%D1%89%D0%B5%D0%BD%D0%B8%D0%B5%20daily%7C%7C%5B1%5D%200%20pkt%20id%7C%5B15%5D%2024%20value%20yesterday%7C%5B16%5D%2025%20value%20today%7C%5B48%5D%200%20chronicle">
+                FMC: Daily
             </a><br>
         </div>
         <div style="margin-left: 100px; background-color: #eee">
