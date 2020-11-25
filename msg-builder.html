@@ -81,7 +81,6 @@
                 bits = bits.map(b => b.split('').reverse().join(''))
                 let binaryString =  bits.join('')
                 binaryString = binaryString.match(/.{8}/g).map(eightBit => {
-                    console.log(eightBit)
                     return eightBit.split('').reverse().join('')
                 }).join('')
                 return binaryString
