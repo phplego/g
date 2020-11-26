@@ -16,11 +16,13 @@
 
         function build()
         {
-            const scheme = document.getElementById('scheme').value
-            const appendZero = document.getElementById('append-zero').checked
+            const scheme        = document.getElementById('scheme').value
+            const appendZero    = document.getElementById('append-zero').checked
+            const reversedByte  = document.getElementById('reversed-byte').checked
+
 
             const bits = scheme2bits(scheme)
-            const hex = scheme2hex(scheme, appendZero)
+            const hex = scheme2hex(scheme, appendZero, reversedByte)
             const bitsLen = bits.replace(/\D+/g, '').length;
 
             let result = ''
@@ -66,6 +68,23 @@
             return fields
         }
 
+        function reverseString(str)
+        {
+            return str.split('').reverse().join('')
+        }
+
+        function reverseBytes(binaryString)
+        {
+            if(binaryString.length % 8 !== 0){
+                const err = 'reverseBytes: binary string must be a multiple of 8'
+                alert(err)
+                throw new Error(err)
+            }
+            return binaryString.match(/.{8}/g).map(eightBit => {
+                return reverseString(eightBit)
+            }).join('')
+        }
+
         function scheme2bits(scheme, reversedByte = false)
         {
             const fields = compile(scheme)
@@ -75,23 +94,20 @@
                 alert(fieldWithErrors.map(x=>x.error).join("\n"))
             }
 
-            let bits = fields.map(x => x.bits)
+            let bitsArray = fields.map(x => x.bits)
 
             if(reversedByte) {
-                bits = bits.map(b => b.split('').reverse().join(''))
-                let binaryString =  bits.join('')
-                binaryString = binaryString.match(/.{8}/g).map(eightBit => {
-                    return eightBit.split('').reverse().join('')
-                }).join('')
-                return binaryString
+                const binaryValuesArrayReversed = bitsArray.map(b => reverseString(b))
+                const binaryStringReversed  =  binaryValuesArrayReversed.join('')
+                return reverseBytes(binaryStringReversed)
             }
 
-            return bits.join(' ');
+            return bitsArray.join(' ');
         }
 
-        function scheme2hex(scheme, appendZeroesToWholeByte = true)
+        function scheme2hex(scheme, appendZeroesToWholeByte = true, reversedByte = false)
         {
-            const bits = scheme2bits(scheme)
+            const bits = scheme2bits(scheme, reversedByte)
             let binaryString = bits.replace(/\s+/g, '')
 
 
@@ -141,8 +157,9 @@
         function explain()
         {
             const hex = document.getElementById('hex').value.replaceAll(' ', '')
+            const reversedByte  = document.getElementById('reversed-byte').checked
             const numberOfBits = hex.length * 4
-            const binary = hex2bin(hex)
+            let binary = hex2bin(hex, reversedByte)
 
             const scheme = document.getElementById('scheme').value
             const fields = compile(scheme)
@@ -155,9 +172,15 @@
             let out = ''
             let offset = 0
 
+            if(reversedByte) {
+                binary = reverseBytes(binary)
+            }
+
             for(const f of fields)
             {
-                const valueBinary = binary.substring(offset, offset + f.size)
+                let valueBinary = binary.substring(offset, offset + f.size)
+                if(reversedByte)
+                    valueBinary = reverseString(valueBinary)
                 out += "\n"
                 out += `<b>${f.description} </b>`
                 out += `<small style="width: 80px; display: inline-block">${f.size} bit ${offset}..${offset+f.size}</small>`
@@ -176,14 +199,20 @@
         function updateSchemeValues()
         {
             const scheme = document.getElementById('scheme').value
-
+            const reversedByte  = document.getElementById('reversed-byte').checked
             const hex = document.getElementById('hex').value.replaceAll(' ', '')
-            const binary = hex2bin(hex)
+
+            let binary = hex2bin(hex)
+
+            if(reversedByte)
+                binary = reverseBytes(binary)
 
             let offset = 0
             const replaced = scheme.replace(/\[(\d+)]\s*(\d+)/g, (all, sz, val) => {
                 sz = parseInt(sz)
                 let valueBinary = binary.substring(offset, offset + sz)
+                if(reversedByte)
+                    valueBinary = reverseString(valueBinary)
                 valueBinary = valueBinary === '' ? 0 : valueBinary
                 let value = parseInt(valueBinary, 2)
                 offset += sz
@@ -200,6 +229,8 @@
 
     <button onclick="location.href = '#'">CLEAR</button>
     <a href="javascript:" onclick="prompt('COPY URL HERE:',createUrl(document.getElementById('scheme').value))">get link</a>
+
+    <input type="checkbox" id="reversed-byte"> Reversed byte
     <br>
     <br>
 
